@@ -1,25 +1,30 @@
-﻿using AspNetCoreMvcPractice.Data;
+﻿using AspNetCoreMvcPractice.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
-namespace AspNetCoreMvcPractice.Controllers
+public class ProductsController : Controller
 {
-    public class ProductsController : Controller
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public ProductsController(IHttpClientFactory httpClientFactory)
     {
-        private readonly NorthwindContext _context;
+        _httpClientFactory = httpClientFactory;
+    }
 
-        // Injected into the controller, dependency configured in Program.cs.
-        public ProductsController(NorthwindContext context)
+    public async Task<IActionResult> Index()
+    {
+        var httpClient = _httpClientFactory.CreateClient();
+
+        var response = await httpClient.GetAsync("https://localhost:44399/api/products");
+
+        List<ProductDto> products = new();
+        if (response.IsSuccessStatusCode)
         {
-            _context = context;
+            var content = await response.Content.ReadAsStringAsync();
+            products = JsonSerializer.Deserialize<List<ProductDto>>(content,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<IActionResult> Index()
-        {
-            // Retrieve all products from the Products table using LINQ.
-            var products = await _context.Products.ToListAsync();
-
-            return View(products);
-        }
+        return View(products);
     }
 }

@@ -8,6 +8,7 @@ var connectionString = builder.Configuration.GetConnectionString("NorthwindConne
 builder.Services.AddDbContext<NorthwindContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddHttpClient();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
