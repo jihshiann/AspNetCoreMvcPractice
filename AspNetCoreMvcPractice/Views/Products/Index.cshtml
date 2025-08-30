@@ -1,12 +1,14 @@
 ﻿@model IEnumerable<AspNetCoreMvcPractice.DTOs.ProductDto>
 
 @{
-    ViewData["Title"] = "Product List";
+    ViewData["Title"] = "產品列表";
 }
 
-<h1>Product List</h1>
-<p>Data is fetched from the Web API.</p>
+<h1>產品列表</h1>
 
+<p>
+    <a asp-action="Create" class="btn btn-success">新增產品</a>
+</p>
 <table class="table">
     <thead>
         <tr>
@@ -14,6 +16,7 @@
             <th>@Html.DisplayNameFor(model => model.ProductName)</th>
             <th>@Html.DisplayNameFor(model => model.UnitPrice)</th>
             <th>@Html.DisplayNameFor(model => model.UnitsInStock)</th>
+            <th>操作</th>
         </tr>
     </thead>
     <tbody>
@@ -24,6 +27,11 @@
                 <td>@Html.DisplayFor(modelItem => item.ProductName)</td>
                 <td>@Html.DisplayFor(modelItem => item.UnitPrice)</td>
                 <td>@Html.DisplayFor(modelItem => item.UnitsInStock)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">編輯</a> |
+                    <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-info">詳情</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-danger">刪除</a>
+                </td>
             </tr>
         }
     </tbody>
