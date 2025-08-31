@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using AspNetCoreMvcPractice.Models;
+using AspNetCoreMvcPractice.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspNetCoreMvcPractice.Controllers

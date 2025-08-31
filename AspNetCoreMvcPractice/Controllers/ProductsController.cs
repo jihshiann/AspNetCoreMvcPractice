@@ -1,4 +1,4 @@
-﻿using AspNetCoreMvcPractice.DTOs;
+﻿using AspNetCoreMvcPractice.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -9,6 +9,7 @@ public class ProductsController : Controller
     private readonly IConfiguration _configuration;
     private readonly string _apiBaseUrl;
 
+    //IoC container 注入 IHttpClientFactory
     public ProductsController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         _httpClientFactory = httpClientFactory;

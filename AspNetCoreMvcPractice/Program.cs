@@ -1,8 +1,12 @@
-using AspNetCoreMvcPractice.Data;
+using AspNetCoreMvcPractice.Core.Interfaces;
+using AspNetCoreMvcPractice.Core.Services;
+using AspNetCoreMvcPractice.Infrastructure.Data;
+using AspNetCoreMvcPractice.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// DI container configuration
 // Register the NorthwindContext service
 var connectionString = builder.Configuration.GetConnectionString("NorthwindConnection");
 builder.Services.AddDbContext<NorthwindContext>(options =>
@@ -11,6 +15,8 @@ builder.Services.AddDbContext<NorthwindContext>(options =>
 builder.Services.AddHttpClient();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();
 

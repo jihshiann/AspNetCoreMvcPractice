@@ -1,143 +1,69 @@
-﻿using AspNetCoreMvcPractice.Data;
-using AspNetCoreMvcPractice.DTOs;
-using AspNetCoreMvcPractice.Models.Entities;
-using Microsoft.AspNetCore.Http;
+﻿// Controllers/ProductsApiController.cs
+using AspNetCoreMvcPractice.Core.DTOs;
+using AspNetCoreMvcPractice.Core.Interfaces; // 引用 Core 的介面
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreMvcPractice.Controllers
 {
-    [Route("api/products")] 
+    [Route("api/products")]
     [ApiController]
     public class ProductsApiController : ControllerBase
     {
-        private readonly NorthwindContext _context;
+        private readonly IProductService _productService;
 
-        public ProductsApiController(NorthwindContext context)
+        // *** 現在注入的是 IProductService ***
+        public ProductsApiController(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
-        // GET: api/products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
-            var products = await _context.Products
-                                         .Where(p => !p.Discontinued)
-                                         .Select(p => new ProductDto
-                                         {
-                                             ProductId = p.ProductId,
-                                             ProductName = p.ProductName,
-                                             UnitPrice = p.UnitPrice,
-                                             UnitsInStock = p.UnitsInStock
-                                         })
-                                         .ToListAsync();
-            return Ok(products);
+            return Ok(await _productService.GetProductsAsync());
         }
 
-        // GET: api/products/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-
-            if (product == null || product.Discontinued)
-            {
-                return NotFound();
-            }
-
-            // Product 轉換為 ProductDto
-            var productDto = new ProductDto
-            {
-                ProductId = product.ProductId,
-                ProductName = product.ProductName,
-                UnitPrice = product.UnitPrice,
-                UnitsInStock = product.UnitsInStock
-            };
-
-            return Ok(productDto);
+            var (product, errorMessage) = await _productService.GetProductByIdAsync(id);
+            if (product == null) return NotFound(new { message = errorMessage });
+            return Ok(product);
         }
 
-        // POST: api/products (add)
         [HttpPost]
         public async Task<ActionResult<ProductDto>> PostProduct(ProductDto productDto)
         {
-
-            if (await _context.Products.AnyAsync(p => p.ProductName == productDto.ProductName))
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var (success, errorMessage, newProduct) = await _productService.CreateProductAsync(productDto);
+            if (!success)
             {
-                // 如果名稱已存在，新增一個模型錯誤並回傳 400 Bad Request
-                ModelState.AddModelError("ProductName", "產品名稱已經存在。");
+                ModelState.AddModelError(string.Empty, errorMessage);
                 return BadRequest(ModelState);
             }
-            var product = new Product
-            {
-                ProductName = productDto.ProductName,
-                UnitPrice = productDto.UnitPrice,
-                UnitsInStock = productDto.UnitsInStock ?? 0,
-                Discontinued = false
-            };
-
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-
-            productDto.ProductId = product.ProductId;
-            // 201 Created 附上新product
-            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, productDto);
+            return CreatedAtAction(nameof(GetProduct), new { id = newProduct.ProductId }, newProduct);
         }
 
-        // PUT: api/products/5 (update)
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(int id, ProductDto productDto)
         {
-            if (id != productDto.ProductId)
-            {
-                return BadRequest();
-            }
+            if (id != productDto.ProductId) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            if (await _context.Products.AnyAsync(p => p.ProductName == productDto.ProductName && p.ProductId != id))
+            var (success, errorMessage) = await _productService.UpdateProductAsync(id, productDto);
+            if (!success)
             {
-                ModelState.AddModelError("ProductName", "此產品名稱已被其他產品使用。");
+                ModelState.AddModelError(string.Empty, errorMessage);
                 return BadRequest(ModelState);
             }
-
-
-            var productToUpdate = await _context.Products.FindAsync(id);
-            if (productToUpdate == null || productToUpdate.Discontinued)
-            {
-                return NotFound();
-            }
-
-            productToUpdate.ProductName = productDto.ProductName;
-            productToUpdate.UnitPrice = productDto.UnitPrice;
-            productToUpdate.UnitsInStock = productDto.UnitsInStock ?? 0;
-
-            await _context.SaveChangesAsync();
-
-            var updatedProductDto = new ProductDto
-            {
-                ProductId = productToUpdate.ProductId,
-                ProductName = productToUpdate.ProductName,
-                UnitPrice = productToUpdate.UnitPrice,
-                UnitsInStock = productToUpdate.UnitsInStock
-            };
-
-            //  200 OK 附更新後product
-            return Ok(updatedProductDto);
+            return NoContent();
         }
 
-        // DELETE: api/products/5 (delete)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            product.Discontinued = true; // 將產品標記為已停用
-            await _context.SaveChangesAsync();
-
+            var (success, errorMessage) = await _productService.DeleteProductAsync(id);
+            if (!success) return NotFound(new { message = errorMessage });
             return NoContent();
         }
     }
