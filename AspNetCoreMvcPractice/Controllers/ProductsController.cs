@@ -58,8 +58,17 @@ public class ProductsController : Controller
         if (ModelState.IsValid)
         {
             var httpClient = _httpClientFactory.CreateClient();
-            await httpClient.PostAsJsonAsync($"{_apiBaseUrl}/api/products", product);
-            return RedirectToAction(nameof(Index));
+            var response = await httpClient.PostAsJsonAsync($"{_apiBaseUrl}/api/products", product);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError(string.Empty, "新增失敗：" + errorContent);
+            }
         }
         return View(product);
     }
@@ -84,8 +93,17 @@ public class ProductsController : Controller
         if (ModelState.IsValid)
         {
             var httpClient = _httpClientFactory.CreateClient();
-            await httpClient.PutAsJsonAsync($"{_apiBaseUrl}/api/products/{id}", product);
-            return RedirectToAction(nameof(Index));
+            var response = await httpClient.PutAsJsonAsync($"{_apiBaseUrl}/api/products/{id}", product);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                ModelState.AddModelError(string.Empty, "更新失敗：" + errorContent);
+            }
         }
         return View(product);
     }
