@@ -62,11 +62,18 @@ namespace AspNetCoreMvcPractice.Controllers
         [HttpPost]
         public async Task<ActionResult<ProductDto>> PostProduct(ProductDto productDto)
         {
+
+            if (await _context.Products.AnyAsync(p => p.ProductName == productDto.ProductName))
+            {
+                // 如果名稱已存在，新增一個模型錯誤並回傳 400 Bad Request
+                ModelState.AddModelError("ProductName", "產品名稱已經存在。");
+                return BadRequest(ModelState);
+            }
             var product = new Product
             {
                 ProductName = productDto.ProductName,
                 UnitPrice = productDto.UnitPrice,
-                UnitsInStock = productDto.UnitsInStock,
+                UnitsInStock = productDto.UnitsInStock ?? 0,
                 Discontinued = false
             };
 
@@ -87,6 +94,13 @@ namespace AspNetCoreMvcPractice.Controllers
                 return BadRequest();
             }
 
+            if (await _context.Products.AnyAsync(p => p.ProductName == productDto.ProductName && p.ProductId != id))
+            {
+                ModelState.AddModelError("ProductName", "此產品名稱已被其他產品使用。");
+                return BadRequest(ModelState);
+            }
+
+
             var productToUpdate = await _context.Products.FindAsync(id);
             if (productToUpdate == null || productToUpdate.Discontinued)
             {
@@ -95,7 +109,7 @@ namespace AspNetCoreMvcPractice.Controllers
 
             productToUpdate.ProductName = productDto.ProductName;
             productToUpdate.UnitPrice = productDto.UnitPrice;
-            productToUpdate.UnitsInStock = productDto.UnitsInStock;
+            productToUpdate.UnitsInStock = productDto.UnitsInStock ?? 0;
 
             await _context.SaveChangesAsync();
 
