@@ -23,6 +23,7 @@ namespace AspNetCoreMvcPractice.Controllers
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
             var products = await _context.Products
+                                         .Where(p => !p.Discontinued)
                                          .Select(p => new ProductDto
                                          {
                                              ProductId = p.ProductId,
@@ -40,9 +41,9 @@ namespace AspNetCoreMvcPractice.Controllers
         {
             var product = await _context.Products.FindAsync(id);
 
-            if (product == null)
+            if (product == null || product.Discontinued)
             {
-                return NotFound(); 
+                return NotFound();
             }
 
             // Product 轉換為 ProductDto
@@ -66,6 +67,7 @@ namespace AspNetCoreMvcPractice.Controllers
                 ProductName = productDto.ProductName,
                 UnitPrice = productDto.UnitPrice,
                 UnitsInStock = productDto.UnitsInStock,
+                Discontinued = false
             };
 
             _context.Products.Add(product);
@@ -86,7 +88,7 @@ namespace AspNetCoreMvcPractice.Controllers
             }
 
             var productToUpdate = await _context.Products.FindAsync(id);
-            if (productToUpdate == null)
+            if (productToUpdate == null || productToUpdate.Discontinued)
             {
                 return NotFound();
             }
@@ -119,7 +121,7 @@ namespace AspNetCoreMvcPractice.Controllers
                 return NotFound();
             }
 
-            _context.Products.Remove(product);
+            product.Discontinued = true; // 將產品標記為已停用
             await _context.SaveChangesAsync();
 
             return NoContent();

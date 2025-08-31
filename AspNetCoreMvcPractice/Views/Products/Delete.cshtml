@@ -3,8 +3,8 @@
     ViewData["Title"] = "Delete";
 }
 
-<h1>刪除產品</h1>
-<h3>您確定要刪除這個產品嗎？</h3>
+<h1>停用產品</h1>
+<h3>您確定要停用這個產品嗎？</h3>
 <div>
     <hr />
     <dl class="row">
@@ -16,7 +16,7 @@
 
     <form asp-action="Delete">
         <input type="hidden" asp-for="ProductId" />
-        <input type="submit" value="確認刪除" class="btn btn-danger" /> |
+        <input type="submit" value="確認停用" class="btn btn-danger" /> |
         <a asp-action="Index">返回列表</a>
     </form>
 </div>
